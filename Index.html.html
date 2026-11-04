@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101820">
+<title>Fresh Mart 3D</title>
+<style>
+:root{--green:#35d07f;--green2:#19a963;--bg:#101820;--panel:#17232e;--line:#ffffff20;--muted:#aab8c5;--gold:#ffd45a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,Arial,sans-serif;touch-action:none}
+button{font:inherit;cursor:pointer}
+#game{position:fixed;inset:0}canvas{display:block}
+#menu,#market{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:18px;background:linear-gradient(135deg,rgba(7,17,22,.94),rgba(12,29,28,.88))}
+.panel{width:min(440px,100%);background:rgba(21,34,43,.97);border:1px solid var(--line);border-radius:24px;padding:25px;box-shadow:0 25px 80px #0009;text-align:center}
+.brand{font-size:13px;letter-spacing:4px;font-weight:900;color:var(--green)}
+.logo{font-size:56px;margin:8px 0 0}
+h1{font-size:31px;line-height:1.03;margin:8px 0}
+.sub{color:var(--muted);font-size:13px;line-height:1.5}
+.play{width:100%;border:0;border-radius:15px;padding:17px;background:linear-gradient(180deg,#49e891,#1ab66a);color:#062416;font-size:19px;font-weight:1000;box-shadow:0 7px 0 #087b46,0 12px 28px #0a9a5540;margin-top:22px}
+.play:active{transform:translateY(4px);box-shadow:0 3px 0 #087b46}
+.menunote{font-size:11px;color:#81909d;margin-top:18px}
+#hud{position:fixed;z-index:5;top:env(safe-area-inset-top,10px);left:12px;right:12px;display:none;align-items:flex-start;justify-content:space-between;gap:8px;pointer-events:none}
+.stat{background:#101b25eF;border:1px solid var(--line);border-radius:13px;padding:8px 11px;min-width:88px;box-shadow:0 5px 18px #0004}
+.stat small{display:block;font-size:9px;letter-spacing:1px;color:#aab8c5;font-weight:900}.stat strong{font-size:17px}
+#marketBtn,#pauseBtn{pointer-events:auto;border:1px solid #ffffff30;background:#15232eeb;color:#fff;border-radius:12px;padding:11px 13px;font-weight:900}
+#marketBtn{background:var(--green);color:#062416;border:0}
+#mission{position:fixed;z-index:5;display:none;top:75px;left:50%;transform:translateX(-50%);padding:9px 13px;background:#101b25eF;border:1px solid var(--line);border-radius:12px;font-size:11px;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+#toast{position:fixed;z-index:30;top:125px;left:50%;transform:translate(-50%,-8px);opacity:0;transition:.2s;background:#1d3040;border:1px solid #ffffff30;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:800;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#prompt{position:fixed;z-index:5;bottom:155px;left:50%;transform:translateX(-50%);display:none;background:#101b25eF;border:1px solid #ffffff35;padding:10px 13px;border-radius:12px;font-size:12px;font-weight:900;white-space:nowrap;pointer-events:none}
+#controls{position:fixed;inset:0;z-index:6;display:none;pointer-events:none}
+#stickArea{position:absolute;left:18px;bottom:24px;width:130px;height:130px;border-radius:50%;background:#101b2577;border:1px solid #ffffff40;pointer-events:auto;touch-action:none}
+#stick{position:absolute;width:54px;height:54px;left:37px;top:37px;border-radius:50%;background:#42df8acc;border:2px solid #fff9}
+#lookArea{position:absolute;right:0;bottom:0;width:58%;height:63%;pointer-events:auto;touch-action:none}
+#useBtn{position:absolute;right:22px;bottom:35px;width:88px;height:88px;border-radius:50%;border:2px solid #fff;background:#43df8b;color:#062416;font-weight:1000;pointer-events:auto}
+#hint{position:fixed;z-index:5;bottom:8px;left:50%;transform:translateX(-50%);font-size:10px;color:#ffffff9c;white-space:nowrap;display:none;pointer-events:none}
+#market{display:none;background:#071018d9;backdrop-filter:blur(10px);z-index:25}
+.marketPanel{width:min(520px,100%);max-height:90vh;overflow:auto;background:#17232e;border:1px solid var(--line);border-radius:22px;padding:19px;box-shadow:0 25px 80px #000b;text-align:left}
+.marketHead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.marketHead h2{margin:0;font-size:22px}.close{border:1px solid var(--line);background:#263744;color:#fff;border-radius:10px;padding:8px 12px;font-weight:900}
+.balance{margin:14px 0;padding:12px;border-radius:13px;background:#10291f;border:1px solid #35d07f50;color:#7df0ad;font-weight:900}
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tab{flex:1;border:1px solid var(--line);background:#21313d;color:#b8c6d0;padding:11px 8px;border-radius:11px;font-weight:900}
+.tab.active{background:var(--green);color:#062416;border-color:var(--green)}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.item{background:#202f3b;border:1px solid var(--line);border-radius:15px;padding:13px;min-height:160px;display:flex;flex-direction:column}
+.item .emoji{font-size:29px}.item h3{margin:6px 0 3px;font-size:14px}.item p{margin:0 0 10px;color:var(--muted);font-size:11px;line-height:1.35;flex:1}
+.buy{border:0;border-radius:10px;padding:10px;background:var(--green);color:#062416;font-weight:1000}
+.buy:disabled{background:#42515b;color:#c2ccd3}
+.notice{font-size:11px;color:#9cabb7;line-height:1.45;margin:13px 2px 2px}
+@media(min-width:800px){#hint{font-size:12px}#stickArea,#useBtn{opacity:.8}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="menu">
+  <div class="panel">
+    <div class="brand">YOUR NEW BUSINESS</div>
+    <div class="logo">🛒</div>
+    <h1>FRESH MART<br>SIMULATOR</h1>
+    <p class="sub">Build your supermarket, fill the shelves and become the best shop owner in town.</p>
+    <button class="play" id="playBtn">▶ PLAY</button>
+    <div class="menunote">3D FIRST-PERSON STORE · MOBILE + DESKTOP</div>
+  </div>
+</div>
+
+<div id="hud">
+  <div class="stat"><small>YOUR CASH</small><strong id="cash">$100</strong></div>
+  <div class="stat"><small>STORE STOCK</small><strong id="stock">0</strong></div>
+  <button id="marketBtn">🛍 MARKET</button>
+  <button id="pauseBtn">Ⅱ</button>
+</div>
+<div id="mission">Restock your shelves to welcome customers!</div>
+<div id="toast"></div>
+<div id="prompt"></div>
+
+<div id="controls">
+  <div id="stickArea"><div id="stick"></div></div>
+  <div id="lookArea"></div>
+  <button id="useBtn">USE</button>
+</div>
+<div id="hint">Move: joystick / WASD · Look: drag / mouse · Interact: USE / E</div>
+
+<div id="market">
+ <div class="marketPanel">
+  <div class="marketHead"><h2>🛍️ MARKET</h2><button class="close" id="closeMarket">✕ CLOSE</button></div>
+  <div class="balance">🪙 Your cash: <span id="marketCash">$100</span></div>
+  <div class="tabs">
+   <button class="tab active" id="freeTab">FREE CASH SHOP</button>
+   <button class="tab" id="realTab">REAL MONEY</button>
+  </div>
+  <div class="items" id="freeItems">
+   <div class="item"><div class="emoji">📦</div><h3>Stock delivery</h3><p>Get 10 products to fill your shelves.</p><button class="buy" data-buy="stock">Buy · $25</button></div>
+   <div class="item"><div class="emoji">🛒</div><h3>Big delivery</h3><p>Get 25 products in your store.</p><button class="buy" data-buy="bigstock">Buy · $50</button></div>
+   <div class="item"><div class="emoji">⚡</div><h3>Speed boost</h3><p>Walk faster around your supermarket.</p><button class="buy" data-buy="speed">Buy · $40</button></div>
+   <div class="item"><div class="emoji">💵</div><h3>Cash bonus</h3><p>A small reward for your store.</p><button class="buy" data-buy="bonus">Buy · $0</button></div>
+  </div>
+  <div class="items" id="realItems" style="display:none">
+   <div class="item"><div class="emoji">💎</div><h3>Starter gems</h3><p>Example premium pack. Real payments are not connected.</p><button class="buy" disabled>Coming soon</button></div>
+   <div class="item"><div class="emoji">👑</div><h3>VIP shop owner</h3><p>Example VIP pack. Real payments are not connected.</p><button class="buy" disabled>Coming soon</button></div>
+  </div>
+  <p class="notice" id="marketNotice">Use the cash you earn in the game to buy supplies and boosts.</p>
+ </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+
+const $=id=>document.getElementById(id);
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0xa9cbd8);
+scene.fog=new THREE.Fog(0xa9cbd8,24,52);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,100);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));
+renderer.setSize(innerWidth,innerHeight);
+renderer.shadowMap.enabled=true;
+renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+$('game').appendChild(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xeaf7ff,0x74604c,2));
+const sun=new THREE.DirectionalLight(0xffedcf,2.2);sun.position.set(-6,13,8);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+const material=c=>new THREE.MeshStandardMaterial({color:c,roughness:.82});
+const box=new THREE.BoxGeometry(1,1,1);
+function cube(parent,x,y,z,sx,sy,sz,mat){const m=new THREE.Mesh(box,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;}
+const floor=material(0xd8d1c0),wall=material(0xeee7d8),wood=material(0x9a6845),shelfMat=material(0x687b8a),dark=material(0x34414c);
+const productMats=[0xe65b4f,0x4c9ed9,0xf0bd3f,0x62b77a,0xa477d1,0xf18a42].map(material);
+
+cube(scene,0,-.2,0,22,.4,22,floor);
+cube(scene,0,4,-10.8,22,8,.35,wall);cube(scene,-10.8,4,0,.35,8,22,wall);cube(scene,10.8,4,0,.35,8,22,wall);
+cube(scene,0,7.9,0,22,.25,22,material(0xf6f2e9));
+for(const x of [-7,-2,3,8]){const l=new THREE.PointLight(0xffefcf,50,13);l.position.set(x,6.7,-2);scene.add(l);cube(scene,x,7.7,-2,2.2,.08,.4,material(0xffffff));}
+cube(scene,-4,2.1,10.6,5.8,4,.12,material(0x8bc5d9));cube(scene,4,2.1,10.6,5.8,4,.12,material(0x8bc5d9));
+cube(scene,0,4.2,10.5,22,.3,.25,wood);cube(scene,0,1.8,10.3,2.8,3.6,.2,material(0x4c9db4));
+cube(scene,0,6.8,-10.45,7,1.1,.25,material(0x245b48));
+const signCanvas=document.createElement('canvas');signCanvas.width=1024;signCanvas.height=180;const sc=signCanvas.getContext('2d');sc.fillStyle='#245b48';sc.fillRect(0,0,1024,180);sc.fillStyle='#ffe06a';sc.font='bold 92px Arial';sc.textAlign='center';sc.fillText('FRESH MART',512,122);
+const sign=new THREE.Mesh(new THREE.PlaneGeometry(6.7,.95),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(signCanvas)}));sign.position.set(0,6.8,-10.25);scene.add(sign);
+
+const shelves=[];
+function makeShelf(x,z,label){
+ const g=new THREE.Group();g.position.set(x,0,z);scene.add(g);
+ cube(g,0,1.15,0,3.5,2.3,.8,shelfMat);
+ for(const y of [.65,1.35,2.05])cube(g,0,y,.48,3.55,.1,.9,wood);
+ for(const xo of [-1.55,1.55])cube(g,xo,1.15,.48,.1,2.3,.12,dark);
+ const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#243346';c.fillRect(0,0,512,128);c.fillStyle='#fff';c.font='bold 48px Arial';c.textAlign='center';c.fillText(label,256,82);
+ const plaque=new THREE.Mesh(new THREE.PlaneGeometry(1.45,.36),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)}));plaque.position.set(0,2.52,.47);g.add(plaque);
+ const s={group:g,x,z,label,stock:0,items:[]};shelves.push(s);return s;
+}
+const shelfA=makeShelf(-5,-5.5,'SNACKS'),shelfB=makeShelf(0,-5.5,'DRINKS'),shelfC=makeShelf(5,-5.5,'FOOD');
+function addProducts(s,n){for(let i=0;i<n&&s.stock<21;i++){const k=s.stock,col=k%7,row=Math.floor(k/7);const p=cube(s.group,-1.25+col*.41,.85+row*.69,.49,.25,.34,.25,productMats[k%productMats.length]);s.items.push(p);s.stock++;}}
+const checkout=new THREE.Group();checkout.position.set(6,0,3.8);scene.add(checkout);
+cube(checkout,0,.55,0,3.5,1.1,1.25,wood);cube(checkout,0,1.13,-.05,3.65,.12,1.35,dark);cube(checkout,.7,1.42,-.2,.65,.45,.55,material(0x303c4e));cube(checkout,.7,1.67,-.2,.5,.05,.4,material(0x7bd4b0));
+
+const player={x:0,z:7.2,yaw:Math.PI,pitch:0,speed:4.4};
+camera.position.set(0,1.7,player.z);
+let cash=100,started=false,paused=false,totalStock=0,activeTarget=null;
+const customers=[],keys={};let moveX=0,moveY=0,joy=false,looking=false,lastX=0,lastY=0,toastTimer;
+function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),1600);}
+function stats(){totalStock=shelves.reduce((a,s)=>a+s.stock,0);$('cash').textContent='$'+cash;$('stock').textContent=totalStock;$('marketCash').textContent='$'+cash;$('mission').textContent=totalStock?'Customers are shopping! Keep your shelves stocked.':'Restock a shelf to welcome customers!';}
+function nearest(){let best=null,dmin=2.8;for(const s of shelves){const d=Math.hypot(player.x-s.x,player.z-s.z);if(d<dmin){best={type:'shelf',s};dmin=d;}}const d=Math.hypot(player.x-6,player.z-3.8);if(d<2.8&&d<dmin)best={type:'checkout'};return best;}
+function interact(){if(!started||paused)return;const t=nearest();if(!t){toast('Move closer to a shelf!');return;}if(t.type==='shelf'){if(t.s.stock>=21){toast('This shelf is full!');return;}if(cash<10){toast('You need $10 to restock.');return;}cash-=10;addProducts(t.s,5);stats();toast(t.s.label+' restocked!');}else toast('Customers pay automatically at checkout.');}
+function refreshShelf(s){for(const p of s.items)s.group.remove(p);s.items=[];s.stock=0;addProducts(s,Math.min(s.stock,21));}
+const colors=[0xe6a06e,0x6f8fd1,0x75b98b,0xc28acb,0xd8b75d];
+function spawnCustomer(){if(!started||paused||customers.length>=3||totalStock<=0)return;const available=shelves.filter(s=>s.stock>0);if(!available.length)return;const s=available[Math.floor(Math.random()*available.length)];const g=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(.28,.65,4,8),material(colors[Math.floor(Math.random()*colors.length)]));body.position.y=.85;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.23,12,10),material(0xd9a47d));head.position.y=1.48;g.add(head);g.position.set(0,0,10.8);scene.add(g);customers.push({g,s,state:0,wait:0});stats();}
+let spawnClock=3;
+function updateCustomers(dt){spawnClock-=dt;if(spawnClock<=0){spawnCustomer();spawnClock=6+Math.random()*3;}for(let i=customers.length-1;i>=0;i--){const c=customers[i],p=c.g.position;const target=c.state===0?[c.s.x,c.s.z+1.5]:c.state===1?[6,5.8]:[0,12];const dx=target[0]-p.x,dz=target[1]-p.z,d=Math.hypot(dx,dz);if(d>.18){const step=Math.min(d,2*dt);p.x+=dx/d*step;p.z+=dz/d*step;c.g.rotation.y=Math.atan2(dx,dz);}else{c.wait+=dt;if(c.state===0&&c.wait>1){c.wait=0;if(c.s.stock>0){c.s.stock--;for(const item of c.s.items)c.s.group.remove(item);c.s.items=[];const remaining=c.s.stock;c.s.stock=0;addProducts(c.s,remaining);c.state=1;}else c.state=2;stats();}else if(c.state===1&&c.wait>1.2){cash+=8;c.state=2;c.wait=0;stats();toast('Sale complete! +$8');}else if(c.state===2&&c.wait>.2){scene.remove(c.g);customers.splice(i,1);stats();}}}}
+function cameraUpdate(){camera.position.set(player.x,1.7,player.z);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;}
+function move(dt){let f=0,s=0;if(keys.w||keys.arrowup)f++;if(keys.s||keys.arrowdown)f--;if(keys.a||keys.arrowleft)s--;if(keys.d||keys.arrowright)s++;f-=moveY;s+=moveX;const len=Math.hypot(f,s);if(len>1){f/=len;s/=len;}const sn=Math.sin(player.yaw),cs=Math.cos(player.yaw);player.x+=(s*cs+f*sn)*player.speed*dt;player.z+=(s*sn-f*cs)*player.speed*dt;player.x=THREE.MathUtils.clamp(player.x,-9.5,9.5);player.z=THREE.MathUtils.clamp(player.z,-9.5,9.5);for(const sh of shelves){if(Math.abs(player.x-sh.x)<2&&Math.abs(player.z-sh.z)<.8)player.z=sh.z+(player.z>=sh.z?1:-1)*.82;}if(Math.abs(player.x-6)<1.9&&Math.abs(player.z-3.8)<.85)player.z=4.7;cameraUpdate();}
+function updatePrompt(){activeTarget=nearest();if(activeTarget){$('prompt').style.display='block';$('prompt').textContent=activeTarget.type==='shelf'?'RESTOCK '+activeTarget.s.label+' · $10':'CHECKOUT';}else $('prompt').style.display='none';}
+
+$('playBtn').onclick=()=>{started=true;$('menu').style.display='none';$('hud').style.display='flex';$('controls').style.display='block';$('hint').style.display='block';$('mission').style.display='block';stats();toast('Welcome to Fresh Mart!');};
+$('pauseBtn').onclick=()=>{paused=!paused;$('pauseBtn').textContent=paused?'▶':'Ⅱ';toast(paused?'Game paused':'Game resumed');};
+$('useBtn').onclick=interact;
+$('marketBtn').onclick=()=>{$('market').style.display='flex';paused=true;};
+$('closeMarket').onclick=()=>{$('market').style.display='none';paused=false;};
+$('freeTab').onclick=()=>{$('freeTab').classList.add('active');$('realTab').classList.remove('active');$('freeItems').style.display='grid';$('realItems').style.display='none';$('marketNotice').textContent='Spend the cash you earn in the game on supplies and boosts.';};
+$('realTab').onclick=()=>{$('realTab').classList.add('active');$('freeTab').classList.remove('active');$('freeItems').style.display='none';$('realItems').style.display='grid';$('marketNotice').textContent='This is a preview only. No real-money payments or purchases are enabled in this version.';};
+document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>{
+ const type=b.dataset.buy;let price=0;
+ if(type==='stock')price=25;if(type==='bigstock')price=50;if(type==='speed')price=40;
+ if(cash<price){toast('Not enough cash!');return;}
+ cash-=price;
+ if(type==='stock'||type==='bigstock'){let amount=type==='stock'?10:25;for(let i=0;i<amount;i++){const s=shelves.reduce((a,v)=>v.stock<v.stock+0?a:v,(shelves[0]));const target=shelves.filter(v=>v.stock<21).sort((a,b)=>a.stock-b.stock)[0];if(target)addProducts(target,1);}toast('Delivery arrived!');}
+ if(type==='speed'){player.speed=6.5;toast('Speed boost activated!');}
+ if(type==='bonus'){cash+=20;toast('Daily bonus +$20!');}
+ stats();
+});
+const stickArea=$('stickArea'),stick=$('stick');
+stickArea.addEventListener('pointerdown',e=>{joy=true;stickArea.setPointerCapture(e.pointerId);stickMove(e);});
+stickArea.addEventListener('pointermove',e=>{if(joy)stickMove(e);});
+function stickMove(e){const r=stickArea.getBoundingClientRect();let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),d=Math.hypot(dx,dy),max=42;if(d>max){dx=dx/d*max;dy=dy/d*max;}stick.style.transform=`translate(${dx}px,${dy}px)`;moveX=dx/max;moveY=dy/max;}
+function resetStick(){joy=false;moveX=moveY=0;stick.style.transform='translate(0,0)';}
+stickArea.addEventListener('pointerup',resetStick);stickArea.addEventListener('pointercancel',resetStick);
+const look=$('lookArea');look.addEventListener('pointerdown',e=>{looking=true;lastX=e.clientX;lastY=e.clientY;look.setPointerCapture(e.pointerId);});
+look.addEventListener('pointermove',e=>{if(!looking)return;player.yaw-=(e.clientX-lastX)*.006;player.pitch=THREE.MathUtils.clamp(player.pitch-(e.clientY-lastY)*.004,-.8,.8);lastX=e.clientX;lastY=e.clientY;});
+look.addEventListener('pointerup',()=>looking=false);look.addEventListener('pointercancel',()=>looking=false);
+let mouse=false;renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){mouse=true;lastX=e.clientX;lastY=e.clientY;}});addEventListener('pointerup',()=>mouse=false);addEventListener('pointermove',e=>{if(mouse){player.yaw-=(e.clientX-lastX)*.004;player.pitch=THREE.MathUtils.clamp(player.pitch-(e.clientY-lastY)*.003,-.8,.8);lastX=e.clientX;lastY=e.clientY;}});
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;if(e.key.toLowerCase()==='e')interact();});addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+const clock=new THREE.Clock();
+function loop(){requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.04);if(started&&!paused){move(dt);updateCustomers(dt);updatePrompt();}renderer.render(scene,camera);}loop();stats();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));});
+</script>
+</body>
+</html>
